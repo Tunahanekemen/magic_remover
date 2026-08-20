@@ -10,6 +10,8 @@ const ImageEditor = ({ originalImageSrc, processedImageSrc, onSave, onCancel }) 
   const [mode, setMode] = useState('erase'); // 'erase' or 'restore'
   const [brushSize, setBrushSize] = useState(20);
   const [isDrawing, setIsDrawing] = useState(false);
+  const [cursorPos, setCursorPos] = useState({ x: 0, y: 0 });
+  const [isHovering, setIsHovering] = useState(false);
   
   // Initialize canvas
   useEffect(() => {
@@ -73,6 +75,22 @@ const ImageEditor = ({ originalImageSrc, processedImageSrc, onSave, onCancel }) 
     if (canvasRef.current) {
       canvasRef.current.getContext('2d').beginPath();
     }
+  };
+
+  const handleMouseMove = (e) => {
+    // Update custom cursor position
+    if (containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect();
+      const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+      const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+      if (clientX !== undefined && clientY !== undefined) {
+        setCursorPos({
+          x: clientX - rect.left,
+          y: clientY - rect.top
+        });
+      }
+    }
+    draw(e);
   };
 
   const draw = (e, isFirstPoint = false) => {
@@ -154,16 +172,30 @@ const ImageEditor = ({ originalImageSrc, processedImageSrc, onSave, onCancel }) 
         </div>
       </div>
 
-      <div className="canvas-wrapper" ref={containerRef}>
+      <div 
+        className="canvas-wrapper" 
+        ref={containerRef}
+        onMouseEnter={() => setIsHovering(true)}
+        onMouseLeave={() => { setIsHovering(false); stopDrawing(); }}
+      >
+        <div 
+          className="brush-cursor" 
+          style={{ 
+            width: `${brushSize}px`, 
+            height: `${brushSize}px`,
+            left: `${cursorPos.x}px`,
+            top: `${cursorPos.y}px`,
+            display: isHovering ? 'block' : 'none'
+          }}
+        />
         <canvas
           ref={canvasRef}
           className="editor-canvas"
           onMouseDown={startDrawing}
-          onMouseMove={draw}
+          onMouseMove={handleMouseMove}
           onMouseUp={stopDrawing}
-          onMouseLeave={stopDrawing}
           onTouchStart={startDrawing}
-          onTouchMove={draw}
+          onTouchMove={handleMouseMove}
           onTouchEnd={stopDrawing}
         />
       </div>
