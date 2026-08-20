@@ -45,7 +45,7 @@ const ImageEditor = ({ originalImageSrc, processedImageSrc, onSave, onCancel }) 
     origImg.src = originalImageSrc;
   }, [originalImageSrc, processedImageSrc]);
 
-  // Helper to get correct coordinates regardless of CSS scaling
+  // Helper to get correct coordinates regardless of CSS scaling (object-fit: contain)
   const getCoordinates = (e) => {
     const canvas = canvasRef.current;
     const rect = canvas.getBoundingClientRect();
@@ -54,13 +54,31 @@ const ImageEditor = ({ originalImageSrc, processedImageSrc, onSave, onCancel }) 
     const clientX = e.clientX || (e.touches && e.touches[0].clientX);
     const clientY = e.clientY || (e.touches && e.touches[0].clientY);
     
-    // Scale coordinates based on actual canvas size vs displayed size
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
+    // Calculate actual rendered dimensions inside the element due to object-fit: contain
+    const elementAspectRatio = rect.width / rect.height;
+    const canvasAspectRatio = canvas.width / canvas.height;
+    
+    let renderWidth = rect.width;
+    let renderHeight = rect.height;
+    let offsetX = 0;
+    let offsetY = 0;
+
+    if (canvasAspectRatio > elementAspectRatio) {
+      // Image is wider, letterboxed top and bottom
+      renderHeight = rect.width / canvasAspectRatio;
+      offsetY = (rect.height - renderHeight) / 2;
+    } else {
+      // Image is taller, pillarboxed left and right
+      renderWidth = rect.height * canvasAspectRatio;
+      offsetX = (rect.width - renderWidth) / 2;
+    }
+
+    const scaleX = canvas.width / renderWidth;
+    const scaleY = canvas.height / renderHeight;
     
     return {
-      x: (clientX - rect.left) * scaleX,
-      y: (clientY - rect.top) * scaleY
+      x: (clientX - rect.left - offsetX) * scaleX,
+      y: (clientY - rect.top - offsetY) * scaleY
     };
   };
 
