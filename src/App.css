@@ -44,6 +44,7 @@
   width: 100%;
   max-width: 800px;
   margin: 0 auto;
+  grid-column: 2; /* Forces center position even if left ad is blocked */
 }
 
 .mobile-only-ad {
@@ -67,6 +68,10 @@
   
   .mobile-only-ad {
     display: block;
+  }
+  
+  .workspace-column {
+    grid-column: auto; /* Reset for mobile */
   }
 }
 
