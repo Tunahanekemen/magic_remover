@@ -10,7 +10,7 @@
   width: 100%;
   aspect-ratio: 4/3;
   border-radius: 16px;
-  overflow: hidden;
+  overflow: auto; /* Allow scrolling for zoomed content */
   border: 1px solid var(--glass-border);
   background-image: 
     linear-gradient(45deg, #e0e0e0 25%, transparent 25%),
