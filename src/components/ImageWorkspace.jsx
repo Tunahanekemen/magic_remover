@@ -1,6 +1,7 @@
 import React, { useState, useRef, useCallback } from 'react';
-import { Upload, Image as ImageIcon, Loader2, Download, Trash2 } from 'lucide-react';
+import { Upload, Image as ImageIcon, Loader2, Download, Trash2, Edit2 } from 'lucide-react';
 import { removeBackground } from '@imgly/background-removal';
+import ImageEditor from './ImageEditor';
 import './ImageWorkspace.css';
 
 const ImageWorkspace = () => {
@@ -9,6 +10,7 @@ const ImageWorkspace = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   const fileInputRef = useRef(null);
 
   const handleDragOver = (e) => {
@@ -93,7 +95,13 @@ const ImageWorkspace = () => {
     setOriginalImage(null);
     setProcessedImage(null);
     setProgress(0);
+    setIsEditing(false);
     if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const handleSaveEdit = (editedImageUrl) => {
+    setProcessedImage(editedImageUrl);
+    setIsEditing(false);
   };
 
   return (
@@ -124,43 +132,62 @@ const ImageWorkspace = () => {
         </div>
       ) : (
         <div className="results-view">
-          <div className="images-container">
-            <div className="image-box">
-              <span className="badge">Original</span>
-              <img src={originalImage} alt="Original" />
-            </div>
-            
-            <div className="image-box checkerboard">
-              <span className="badge badge-accent">Result</span>
-              {isProcessing ? (
-                <div className="processing-overlay">
-                  <Loader2 className="spinner" size={48} />
-                  <p>Processing...</p>
-                  <div className="progress-bar-container">
-                    <div className="progress-bar" style={{ width: `${progress}%` }}></div>
-                  </div>
-                  <span className="progress-text">{progress}% (Downloading AI Model if first time)</span>
+          {isEditing ? (
+            <ImageEditor 
+              originalImageSrc={originalImage}
+              processedImageSrc={processedImage}
+              onSave={handleSaveEdit}
+              onCancel={() => setIsEditing(false)}
+            />
+          ) : (
+            <>
+              <div className="images-container">
+                <div className="image-box">
+                  <span className="badge">Original</span>
+                  <img src={originalImage} alt="Original" />
                 </div>
-              ) : processedImage ? (
-                <img src={processedImage} alt="Processed" className="processed-img" />
-              ) : null}
-            </div>
-          </div>
-          
-          <div className="action-buttons">
-            <button className="btn btn-secondary" onClick={handleReset} disabled={isProcessing}>
-              <Trash2 size={18} />
-              Start Over
-            </button>
-            <button 
-              className="btn btn-primary" 
-              onClick={handleDownload} 
-              disabled={isProcessing || !processedImage}
-            >
-              <Download size={18} />
-              Download Result
-            </button>
-          </div>
+                
+                <div className="image-box checkerboard">
+                  <span className="badge badge-accent">Result</span>
+                  {isProcessing ? (
+                    <div className="processing-overlay">
+                      <Loader2 className="spinner" size={48} />
+                      <p>Processing...</p>
+                      <div className="progress-bar-container">
+                        <div className="progress-bar" style={{ width: `${progress}%` }}></div>
+                      </div>
+                      <span className="progress-text">{progress}% (Downloading AI Model if first time)</span>
+                    </div>
+                  ) : processedImage ? (
+                    <img src={processedImage} alt="Processed" className="processed-img" />
+                  ) : null}
+                </div>
+              </div>
+              
+              <div className="action-buttons">
+                <button className="btn btn-secondary" onClick={handleReset} disabled={isProcessing}>
+                  <Trash2 size={18} />
+                  Start Over
+                </button>
+                <button 
+                  className="btn btn-secondary" 
+                  onClick={() => setIsEditing(true)} 
+                  disabled={isProcessing || !processedImage}
+                >
+                  <Edit2 size={18} />
+                  Edit Manually
+                </button>
+                <button 
+                  className="btn btn-primary" 
+                  onClick={handleDownload} 
+                  disabled={isProcessing || !processedImage}
+                >
+                  <Download size={18} />
+                  Download Result
+                </button>
+              </div>
+            </>
+          )}
         </div>
       )}
     </div>
